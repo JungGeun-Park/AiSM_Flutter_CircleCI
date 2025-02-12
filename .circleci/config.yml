@@ -14,7 +14,21 @@ jobs:
       - checkout
 
       - run:
+          name: Find iOS Project Directory
+          command: |
+            # Find iOS project directory
+            PROJECT_DIR=$(find . -type d -name "ios" | head -n 1)
+            if [ -z "$PROJECT_DIR" ]; then
+              echo "❌ ERROR: iOS project directory not found"
+              exit 1
+            fi
+            echo "export PROJECT_DIR=$PROJECT_DIR" >> $BASH_ENV
+            echo "Found iOS project at: $PROJECT_DIR"
+            source $BASH_ENV
+
+      - run:
           name: Extract Workspace and Scheme
+          working_directory: $PROJECT_DIR
           command: |
             # Check if xcworkspace exists
             if ls *.xcworkspace 1> /dev/null 2>&1; then
@@ -27,18 +41,14 @@ jobs:
               SCHEME_NAME=$(xcodebuild -project "$PROJECT_NAME" -list | grep -A 1 "Schemes:" | tail -n 1 | xargs)
             fi
             echo "export SCHEME_NAME=$SCHEME_NAME" >> $BASH_ENV
-
-            echo PROJECT_NAME = ${PROJECT_NAME}
-            echo WORKSPACE_NAME = ${WORKSPACE_NAME}
-            echo SCHEME_NAME = ${SCHEME_NAME}
-
-            # Extract Bundle ID and properly escape it
+            
+            # Extract Bundle ID
             if [ ! -z "$WORKSPACE_NAME" ]; then
               BUNDLE_ID=$(xcodebuild -workspace "$WORKSPACE_NAME" -scheme "$SCHEME_NAME" -showBuildSettings | grep "^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //')
             else
               BUNDLE_ID=$(xcodebuild -project "$PROJECT_NAME" -scheme "$SCHEME_NAME" -showBuildSettings | grep "^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //')
             fi
-
+            
             if [ -z "$BUNDLE_ID" ]; then
               echo "❌ ERROR: BUNDLE_ID could not be extracted."
               exit 1
@@ -50,6 +60,7 @@ jobs:
 
       - run:
           name: 키체인 설정
+          working_directory: $PROJECT_DIR
           command: |
             security create-keychain -p circle circle.keychain
             security default-keychain -s circle.keychain
@@ -58,18 +69,21 @@ jobs:
       
       - run:
           name: 인증서 설치
+          working_directory: $PROJECT_DIR
           command: |
             security import ./distribution.p12 -k ~/Library/Keychains/circle.keychain -P $CERTIFICATE_PASSWORD -T /usr/bin/codesign
             security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k circle circle.keychain
       
       - run:
           name: 프로비저닝 프로파일 설치
+          working_directory: $PROJECT_DIR
           command: |
             mkdir -p ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/
             cp ./profile.mobileprovision ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/
       
       - run:
           name: Generate exportOptions.plist
+          working_directory: $PROJECT_DIR
           command: |
             cat > ./exportOptions.plist \<< EOL
             <?xml version="1.0" encoding="UTF-8"?>
@@ -100,6 +114,7 @@ jobs:
 
       - run:
           name: 빌드 번호 자동 증가
+          working_directory: $PROJECT_DIR
           command: |
             if [ ! -z "$WORKSPACE_NAME" ]; then
               cd $(dirname "$WORKSPACE_NAME")
@@ -112,6 +127,7 @@ jobs:
 
       - run:
           name: 빌드
+          working_directory: $PROJECT_DIR
           command: |
             if [ ! -z "$WORKSPACE_NAME" ]; then
               xcodebuild \
@@ -135,6 +151,7 @@ jobs:
 
       - run:
           name: Export IPA
+          working_directory: $PROJECT_DIR
           command: |
             xcodebuild \
               -exportArchive \
@@ -144,6 +161,7 @@ jobs:
 
       - run:
           name: Generate Hash
+          working_directory: $PROJECT_DIR
           command: |
             # 스크립트에 실행 권한 부여
             HASH_SCRIPT=$(find . -name "generate_hash" -path "*/AppSealingSDK/*")
@@ -160,6 +178,7 @@ jobs:
                         
       - run:
           name: App Store Connect에 업로드
+          working_directory: $PROJECT_DIR
           command: |
             xcrun altool --upload-app \
               --type ios \

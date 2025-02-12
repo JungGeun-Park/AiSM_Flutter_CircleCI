@@ -61,7 +61,7 @@ jobs:
             
             cd $PROJECT_DIR
             rm -f Podfile
-            cat > Podfile << EOL
+            cat > Podfile \<< EOL
               platform :ios, '12.0'
 
               target 'Runner' do

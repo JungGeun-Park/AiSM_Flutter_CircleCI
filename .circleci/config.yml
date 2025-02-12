@@ -26,6 +26,14 @@ jobs:
             echo "Found iOS project at: $PROJECT_DIR"
             source $BASH_ENV
 
+            # Set FLUTTER_ROOT to CircleCI Flutter SDK path
+            echo "export FLUTTER_ROOT=/Users/distiller/flutter" >> $BASH_ENV
+            echo "export PROJECT_DIR=$PROJECT_DIR" >> $BASH_ENV
+            source $BASH_ENV
+            
+            echo "FLUTTER_ROOT = $FLUTTER_ROOT"
+            echo "Found iOS project at: $PROJECT_DIR"            
+
       - run:
           name: Extract Workspace and Scheme
           command: |

@@ -51,17 +51,25 @@ jobs:
             # iOS 개발에 필요한 Flutter 컴포넌트만 설치
             flutter config --no-analytics
             flutter precache --ios
-            
-            # CocoaPods 설치 (iOS 의존성 관리에 필요)
-            sudo gem install cocoapods
 
       - run:
-          name: Flutter Setup
+          name: Setup iOS Build
           command: |
             cd $PROJECT_DIR/..
-            flutter clean
+            # Podfile 생성을 위해 iOS 네이티브 의존성이 있는 패키지 추가
+            echo "webview_flutter: ^3.0.0" >> pubspec.yaml
             flutter pub get
+            
             cd $PROJECT_DIR
+            if [ ! -f "Podfile" ]; then
+              pod init
+              # Podfile 설정 추가
+              echo "platform :ios, '12.0'" >> Podfile
+              echo "target 'Runner' do" >> Podfile
+              echo "  use_frameworks!" >> Podfile
+              echo "  use_modular_headers!" >> Podfile
+              echo "end" >> Podfile
+            fi
             pod install
 
       - run:

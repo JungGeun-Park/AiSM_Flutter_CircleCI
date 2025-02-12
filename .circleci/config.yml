@@ -35,47 +35,23 @@ jobs:
             echo "Directory contents:"
             ls -la
             
-            # Check if xcworkspace exists
-            if ls *.xcworkspace 1> /dev/null 2>&1; then
-              WORKSPACE_NAME=$(ls | grep xcworkspace | head -n 1)
-              echo "Found workspace: $WORKSPACE_NAME"
-              echo "Workspace contents:"
-              ls -la "$WORKSPACE_NAME"
-              
-              echo "Available schemes:"
-              xcodebuild -workspace "$WORKSPACE_NAME" -list
-              
-              SCHEME_NAME=$(xcodebuild -workspace "$WORKSPACE_NAME" -list | grep -A 1 "Schemes:" | tail -n 1 | xargs)
-            else
-              PROJECT_NAME=$(ls | grep xcodeproj | head -n 1)
-              echo "Found project: $PROJECT_NAME"
-              echo "Project contents:"
-              ls -la "$PROJECT_NAME"
-              
-              echo "Available schemes:"
-              xcodebuild -project "$PROJECT_NAME" -list
-              
-              SCHEME_NAME=$(xcodebuild -project "$PROJECT_NAME" -list | grep -A 1 "Schemes:" | tail -n 1 | xargs)
-            fi
+            # Flutter iOS 프로젝트는 항상 Runner를 사용
+            PROJECT_NAME="Runner.xcodeproj"
+            WORKSPACE_NAME="Runner.xcworkspace"
+            SCHEME_NAME="Runner"
             
-            if [ -z "$SCHEME_NAME" ]; then
-              echo "❌ ERROR: No scheme found"
-              exit 1
-            fi
-            echo "Selected scheme: $SCHEME_NAME"
-
-            # Extract Bundle ID and properly escape it
-            if [ ! -z "$WORKSPACE_NAME" ]; then
-              BUNDLE_ID=$(xcodebuild -workspace "$WORKSPACE_NAME" -scheme "$SCHEME_NAME" -showBuildSettings | grep "^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //')
-            else
-              BUNDLE_ID=$(xcodebuild -project "$PROJECT_NAME" -scheme "$SCHEME_NAME" -showBuildSettings | grep "^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //')
-            fi
-
+            echo "export PROJECT_NAME=$PROJECT_NAME" >> $BASH_ENV
+            echo "export WORKSPACE_NAME=$WORKSPACE_NAME" >> $BASH_ENV
+            echo "export SCHEME_NAME=$SCHEME_NAME" >> $BASH_ENV
+            
+            # Extract Bundle ID
+            BUNDLE_ID=$(xcodebuild -workspace "$WORKSPACE_NAME" -scheme "$SCHEME_NAME" -showBuildSettings | grep "^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //')
+            
             if [ -z "$BUNDLE_ID" ]; then
               echo "❌ ERROR: BUNDLE_ID could not be extracted."
               exit 1
             fi
-      
+            
             echo "BUNDLE_ID=\"$BUNDLE_ID\"" >> $BASH_ENV
             echo Bundle ID = ${BUNDLE_ID}
             source $BASH_ENV

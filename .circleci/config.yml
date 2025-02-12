@@ -35,6 +35,36 @@ jobs:
             echo "Found iOS project at: $PROJECT_DIR"            
 
       - run:
+          name: Download Flutter SDK
+          command: |
+            cd ~
+            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_3.19.3-stable.zip
+            unzip flutter_macos_arm64_3.19.3-stable.zip
+
+      - run:
+          name: Add Flutter to PATH
+          command: |
+            echo 'export PATH="$PATH:~/flutter/bin"' >> $BASH_ENV
+            echo 'export FLUTTER_ROOT="/Users/distiller/flutter"' >> $BASH_ENV
+            source $BASH_ENV
+
+      - run:
+          name: Flutter Setup
+          command: |
+            flutter doctor
+            cd $PROJECT_DIR/..
+            flutter clean
+            flutter pub get
+            cd $PROJECT_DIR
+            pod install
+
+      - run:
+          name: Generate Flutter Files
+          command: |
+            cd $PROJECT_DIR/..
+            flutter build ios --release --no-codesign
+
+      - run:
           name: Extract Workspace and Scheme
           command: |
             cd $PROJECT_DIR
@@ -116,23 +146,6 @@ jobs:
             </plist>
             EOL
             cat ./exportOptions.plist
-
-      - run:
-          name: Download Flutter SDK
-          command: |
-            cd ~
-            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_3.19.3-stable.zip
-            unzip flutter_macos_arm64_3.19.3-stable.zip
-
-      - run:
-          name: Add Flutter to PATH
-          command: |
-            echo 'export PATH="$PATH:~/flutter/bin"' >> $BASH_ENV
-            source $BASH_ENV
-
-      - run:
-          name: Flutter Doctor
-          command: flutter doctor
 
       - run:
           name: Clean Flutter Project

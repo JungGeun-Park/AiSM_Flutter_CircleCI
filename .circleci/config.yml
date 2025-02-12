@@ -136,6 +136,7 @@ jobs:
       - run:
           name: 빌드 번호 자동 증가
           command: |
+            cd $PROJECT_DIR
             if [ ! -z "$WORKSPACE_NAME" ]; then
               cd $(dirname "$WORKSPACE_NAME")
             else

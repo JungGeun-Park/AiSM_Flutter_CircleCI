@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/aism_flutter_circleci.iml" filepath="$PROJECT_DIR$/aism_flutter_circleci.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/aism_flutter_circleci_android.iml" filepath="$PROJECT_DIR$/android/aism_flutter_circleci_android.iml" />
+    </modules>
+  </component>
+</project>

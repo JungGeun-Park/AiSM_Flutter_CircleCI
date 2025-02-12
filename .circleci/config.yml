@@ -40,18 +40,24 @@ jobs:
             cd ~
             curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_3.27.4-stable.zip
             unzip flutter_macos_arm64_3.27.4-stable.zip
-            
+
       - run:
-          name: Add Flutter to PATH
+          name: Add Flutter to PATH and Setup iOS Environment
           command: |
             echo 'export PATH="$PATH:~/flutter/bin"' >> $BASH_ENV
             echo 'export FLUTTER_ROOT="/Users/distiller/flutter"' >> $BASH_ENV
             source $BASH_ENV
+            
+            # iOS 개발에 필요한 Flutter 컴포넌트만 설치
+            flutter config --no-analytics
+            flutter precache --ios
+            
+            # CocoaPods 설치 (iOS 의존성 관리에 필요)
+            sudo gem install cocoapods
 
       - run:
           name: Flutter Setup
           command: |
-            flutter doctor
             cd $PROJECT_DIR/..
             flutter clean
             flutter pub get

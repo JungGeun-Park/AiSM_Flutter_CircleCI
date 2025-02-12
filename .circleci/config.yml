@@ -118,6 +118,14 @@ jobs:
             cat ./exportOptions.plist
 
       - run:
+          name: Clean Flutter Project
+          command: |
+            cd $PROJECT_DIR
+            flutter clean
+            rm -rf ios/Flutter/Flutter.framework
+            xcodebuild clean -workspace Runner.xcworkspace -scheme Runner
+
+      - run:
           name: 빌드 번호 자동 증가
           command: |
             cd $PROJECT_DIR
@@ -134,6 +142,7 @@ jobs:
           name: 빌드
           command: |
             cd $PROJECT_DIR
+            
             if [ ! -z "$WORKSPACE_NAME" ]; then
               xcodebuild \
                 -workspace "$WORKSPACE_NAME" \

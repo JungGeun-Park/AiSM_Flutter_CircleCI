@@ -56,20 +56,21 @@ jobs:
           name: Setup iOS Build
           command: |
             cd $PROJECT_DIR/..
-            # Podfile 생성을 위해 iOS 네이티브 의존성이 있는 패키지 추가
-            echo "webview_flutter: ^3.0.0" >> pubspec.yaml
+            flutter clean
             flutter pub get
             
             cd $PROJECT_DIR
-            if [ ! -f "Podfile" ]; then
-              pod init
-              # Podfile 설정 추가
-              echo "platform :ios, '12.0'" >> Podfile
-              echo "target 'Runner' do" >> Podfile
-              echo "  use_frameworks!" >> Podfile
-              echo "  use_modular_headers!" >> Podfile
-              echo "end" >> Podfile
-            fi
+            rm -f Podfile
+            cat > Podfile << EOL
+              platform :ios, '12.0'
+
+              target 'Runner' do
+                use_frameworks!
+                use_modular_headers!
+                
+                flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+              end
+              EOL
             pod install
 
       - run:

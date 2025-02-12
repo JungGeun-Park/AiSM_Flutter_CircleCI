@@ -77,7 +77,31 @@ jobs:
           name: Generate Flutter Files
           command: |
             cd $PROJECT_DIR/..
+            # Flutter 빌드 전 Generated.xcconfig 생성을 위한 설정
+            flutter config --no-analytics
+            flutter clean
+            flutter pub get
+            
+            # iOS 빌드 파일 생성
             flutter build ios --release --no-codesign
+            
+            # Generated.xcconfig 파일 확인
+            if [ ! -f "$PROJECT_DIR/Flutter/Generated.xcconfig" ]; then
+              echo "❌ ERROR: Generated.xcconfig not found after build"
+              exit 1
+            fi
+
+      - run:
+          name: Setup iOS Build Environment
+          command: |
+            cd $PROJECT_DIR
+            
+            # Release.xcconfig 파일이 Generated.xcconfig를 올바르게 참조하도록 수정
+            echo '#include "Flutter/Generated.xcconfig"' > Flutter/Release.xcconfig
+            echo '#include "Flutter/Generated.xcconfig"' > Flutter/Debug.xcconfig
+            
+            # CocoaPods 설치
+            pod install
 
       - run:
           name: Extract Workspace and Scheme

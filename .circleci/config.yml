@@ -118,6 +118,23 @@ jobs:
             cat ./exportOptions.plist
 
       - run:
+          name: Download Flutter SDK
+          command: |
+            cd ~
+            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/macos/flutter_macos_arm64_3.19.3-stable.zip
+            unzip flutter_macos_arm64_3.19.3-stable.zip
+
+      - run:
+          name: Add Flutter to PATH
+          command: |
+            echo 'export PATH="$PATH:~/flutter/bin"' >> $BASH_ENV
+            source $BASH_ENV
+
+      - run:
+          name: Flutter Doctor
+          command: flutter doctor
+
+      - run:
           name: Clean Flutter Project
           command: |
             cd $PROJECT_DIR
